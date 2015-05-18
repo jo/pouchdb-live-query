@@ -1,0 +1,37 @@
+{
+  "name": "pouchdb-live-query",
+  "version": "1.0.0",
+  "description": "PouchDB plugin which keeps a view live by listening to the changes feed.",
+  "main": "index.js",
+  "scripts": {
+    "test": "tape test.js | tap-spec",
+    "build": "browserify ./ > dist/pouch-live-query.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/jo/pouchdb-live-query.git"
+  },
+  "keywords": [
+    "couchdb",
+    "pouchdb",
+    "plugin"
+  ],
+  "author": "Johannes J. Schmidt <schmidt@netzmerk.com> (http://die-tf.de/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jo/pouchdb-live-query/issues"
+  },
+  "homepage": "https://github.com/jo/pouchdb-live-query#readme",
+  "devDependencies": {
+    "browserify": "^10.1.3",
+    "memdown": "^1.0.0",
+    "tap-spec": "^3.0.0",
+    "tape": "^4.0.0"
+  },
+  "dependencies": {
+    "inherits": "^2.0.1",
+    "pouchdb": "^3.5.0",
+    "pouchdb-collate": "^1.2.0",
+    "quick-insert": "^1.0.0"
+  }
+}

@@ -3,6 +3,8 @@ Provide a view which keeps itself up to date by listening to the changes feed.
 
 [![Build Status](https://travis-ci.org/jo/pouchdb-live-query.svg?branch=master)](https://travis-ci.org/jo/pouchdb-live-query)
 
+**:warning: Very alpha.**
+
 ## Installation
 pouchdb-live-query is [hosted on npm](https://www.npmjs.com/package/pouchdb-live-query).
 

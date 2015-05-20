@@ -182,9 +182,6 @@ test('descending', function(db, t) {
     })
     .then(function(result) {
       t.equals(result.total_rows, 1, 'correct # total rows')
-      t.deepEqual(result.rows, [
-        { id: 'one', key: 'aaa', value: 1 }
-      ], 'result.rows is correct')
 
       result.on('change', function(change) {
         t.equals(result.total_rows, 2, 'correct # total rows')

@@ -31,6 +31,10 @@ function LiveQuery(db, fun, map, options, result) {
       output.value = normalizeKey(value)
     }
     
+    if (options.include_docs) {
+      output.doc = doc
+    }
+    
     mapResults.push(output)
   }
 
@@ -39,7 +43,7 @@ function LiveQuery(db, fun, map, options, result) {
   var mapFun = evalFunc(map.toString(), emit, sum, log, Array.isArray, JSON.parse)
 
   var sortFun = function(a, b) {
-    return collate(a.key, b.key)
+    return options.descending ? collate(b.key, a.key) : collate(a.key, b.key)
   }
 
   var insertRow = function(row) {
@@ -72,9 +76,6 @@ function LiveQuery(db, fun, map, options, result) {
 
       self.total_rows += mapResults.length
 
-      // self.rows = self.rows.concat(mapResults)
-      // self.rows.sort(sortFun)
-
       mapResults.forEach(insertRow)
     }
 
@@ -100,6 +101,9 @@ function getMapFun(db, map) {
 
 exports.liveQuery = function(fun, options, callback) {
   var db = this
+
+  options = options || {}
+
 
   return getMapFun(db, fun)
     .then(function(mapFun) {

@@ -204,3 +204,39 @@ test('descending', function(db, t) {
     })
 })
 
+test('cancel', function(db, t) {
+  var docOne = docs[0]
+  var docTwo = docs[1]
+  var docThree = docs[2]
+
+  db.put(ddoc)
+    .then(function() {
+      return db.put(docOne)
+    })
+    .then(function() {
+      return db.liveQuery('bar/foos')
+    })
+    .then(function(result) {
+      t.equals(result.total_rows, 1, 'correct # total rows')
+
+      result.on('change', function(change) {
+        t.equals(result.total_rows, 2, 'correct # total rows')
+        
+        result.cancel()
+      
+        db.put(docThree)
+          .then(function() {
+            t.equals(result.total_rows, 2, 'correct # total rows')
+            t.end()
+          })
+      })
+    })
+    .then(function() {
+      return db.put(docTwo)
+    })
+    .catch(function(e) {
+      console.error(e)
+      console.error(e.stack)
+    })
+})
+

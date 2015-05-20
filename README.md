@@ -31,12 +31,32 @@ var db = new PouchDB('mydb')
 
 db.liveQuery('my/view')
   .then(function(result) {
-    // result is an extended view query result
-    result.on('change', function() {
+    // result is extended view query result
+    // { total_rows: 3, rows: [{ id: 'mydoc', key: ... }, ...] }
+    
+    // event emitter
+    result.on('change', function(change) {
       // result has been updated
     })
+
+    // stop listening
+    result.cance()
   })
 ```
+
+## `db.liveQuery(fun, [options])`
+Similar to [`db.query`](http://pouchdb.com/api.html#query_database).
+
+### Options
+* `fun`: The name of a view in an existing design document, e.g. `'mydesigndoc/myview'`.
+* `options.include_docs`: Include the document in each row in the doc field. 
+* `options.descending`: Reverse the order of the output rows.
+
+## Whats Missing
+* `callback` - Currently works only with promises.
+* `options.key`, `options.startkey`, `options.endkey` - Keys are ignored on view update.
+* `options.reduce` - No reduce support at all.
+Just to mention some...
 
 ## Tests
 

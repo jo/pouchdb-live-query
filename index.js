@@ -75,9 +75,6 @@ function LiveQuery(db, fun, map, options, result) {
 
       self.total_rows += mapResults.length
 
-      // self.rows = self.rows.concat(mapResults)
-      // self.rows.sort(sortFun)
-
       mapResults.forEach(insertRow)
     }
 

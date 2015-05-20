@@ -30,6 +30,10 @@ function LiveQuery(db, fun, map, options, result) {
       output.value = normalizeKey(value)
     }
     
+    if (options.include_docs) {
+      output.doc = doc
+    }
+    
     mapResults.push(output)
   }
 
@@ -99,6 +103,9 @@ function getMapFun(db, map) {
 
 exports.liveQuery = function(fun, options, callback) {
   var db = this
+
+  options = options || {}
+
 
   return getMapFun(db, fun)
     .then(function(mapFun) {

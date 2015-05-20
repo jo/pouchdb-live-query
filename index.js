@@ -42,7 +42,7 @@ function LiveQuery(db, fun, map, options, result) {
   var mapFun = evalFunc(map.toString(), emit, sum, log, Array.isArray, JSON.parse)
 
   var sortFun = function(a, b) {
-    return collate(a.key, b.key)
+    return options.descending ? collate(b.key, a.key) : collate(a.key, b.key)
   }
 
   var insertRow = function(row) {

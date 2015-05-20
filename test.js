@@ -168,3 +168,39 @@ test('include_docs', function(db, t) {
       console.error(e.stack)
     })
 })
+
+test('descending', function(db, t) {
+  var docOne = docs[0]
+  var docTwo = docs[1]
+
+  db.put(ddoc)
+    .then(function() {
+      return db.put(docOne)
+    })
+    .then(function() {
+      return db.liveQuery('bar/foos', { descending: true })
+    })
+    .then(function(result) {
+      t.equals(result.total_rows, 1, 'correct # total rows')
+      t.deepEqual(result.rows, [
+        { id: 'one', key: 'aaa', value: 1 }
+      ], 'result.rows is correct')
+
+      result.on('change', function(change) {
+        t.equals(result.total_rows, 2, 'correct # total rows')
+        t.deepEqual(result.rows, [
+          { id: 'two', key: 'bbb', value: 2 },
+          { id: 'one', key: 'aaa', value: 1 }
+        ], 'result.rows is correct')
+        t.end()
+      })
+    })
+    .then(function() {
+      return db.put(docTwo)
+    })
+    .catch(function(e) {
+      console.error(e)
+      console.error(e.stack)
+    })
+})
+

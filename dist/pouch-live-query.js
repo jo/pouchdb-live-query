@@ -15,9 +15,9 @@ function LiveQuery(db, fun, map, options, result) {
 
   EE.call(this)
 
-  this.rows = result.rows
-  this.total_rows = result.total_rows
-  this.update_seq = result.update_seq
+  for (var property in result) {
+    this[property] = result[property]
+  }
 
   var mapResults
   var doc
@@ -101,7 +101,7 @@ function getMapFun(db, map) {
     })
 }
 
-exports.liveQuery = function(fun, options, callback) {
+exports.liveQuery = function(fun, options) {
   var db = this
 
   options = options || {}

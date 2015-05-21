@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "tape test.js | tap-spec",
-    "build": "browserify ./ > dist/pouch-live-query.js"
+    "build": "browserify ./ > dist/pouchdb-live-query.js"
   },
   "repository": {
     "type": "git",

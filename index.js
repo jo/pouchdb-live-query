@@ -49,14 +49,17 @@ function LiveQuery(db, fun, map, options, result) {
     quickInsert(row, self.rows, sortFun)
   }
 
-  var changes = db.changes({
+  var changesOptions = {
     include_docs: true,
     live: true,
     since: 'now',
     filter: '_view',
     view: fun
-  })
-  .on('change', function(change) {
+  }
+
+  var changes = db.changes(changesOptions)
+
+  changes.on('change', function(change) {
     var count = 0
 
     for (var i = 0; i < self.rows.length; i++) {
@@ -80,10 +83,7 @@ function LiveQuery(db, fun, map, options, result) {
 
     self.emit('change', change)
   })
-  .on('error', function(e) {
-    console.log(e, e.stack)
-  })
-
+  
   this.cancel = changes.cancel.bind(changes)
 }
 

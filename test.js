@@ -4,6 +4,7 @@ var memdown = require('memdown')
 PouchDB.plugin(require('./'))
 
 var test = function(name, fun) {
+  // var db = new PouchDB('test-' + name)
   var db = new PouchDB('test-' + name, { db: memdown })
 
   tape(name, function(t) {
@@ -16,7 +17,9 @@ var ddoc = {
   views: {
     foos: {
       map: function(doc) {
-        emit(doc.foo, doc.n)
+        if ('foo' in doc) {
+          emit(doc.foo, doc.n)
+        }
       }.toString()
     }
   }
@@ -124,7 +127,11 @@ test('delete', function(db, t) {
       return db.get('one')
     })
     .then(function(doc) {
-      return db.remove(doc._id, doc._rev)
+      // note that you can simply remove
+      // return db.remove(doc._id, doc._rev)
+      // because the doc would not show up in the view
+      doc._deleted = true
+      return db.put(doc)
     })
 })
 

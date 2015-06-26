@@ -1,126 +1,4 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-var EE = require('events').EventEmitter
-var inherit = require('inherits')
-var pouchCollate = require('pouchdb-collate')
-var collate = pouchCollate.collate
-var normalizeKey = pouchCollate.normalizeKey
-var evalFunc = require('./lib/evalfunc')
-var quickInsert = require('quick-insert')
-
-
-inherit(LiveQuery, EE)
-
-function LiveQuery(db, fun, map, options, result) {
-  var self = this
-
-  EE.call(this)
-
-  for (var property in result) {
-    this[property] = result[property]
-  }
-
-  var mapResults
-  var doc
-  function emit(key, value) {
-    var output = {
-      id: doc._id,
-      key: normalizeKey(key)
-    }
-    
-    if (typeof value !== 'undefined' && value !== null) {
-      output.value = normalizeKey(value)
-    }
-    
-    if (options.include_docs) {
-      output.doc = doc
-    }
-    
-    mapResults.push(output)
-  }
-
-  var sum
-  var log = console.log
-  var mapFun = evalFunc(map.toString(), emit, sum, log, Array.isArray, JSON.parse)
-
-  var sortFun = function(a, b) {
-    return options.descending ? collate(b.key, a.key) : collate(a.key, b.key)
-  }
-
-  var insertRow = function(row) {
-    quickInsert(row, self.rows, sortFun)
-  }
-
-  var changes = db.changes({
-    include_docs: true,
-    live: true,
-    since: 'now',
-    filter: '_view',
-    view: fun
-  })
-  .on('change', function(change) {
-    var count = 0
-
-    for (var i = 0; i < self.rows.length; i++) {
-      if (self.rows[i].id === change.id) {
-        count++
-        self.rows.splice(i, 1)
-      }
-    }
-    self.total_rows -= count
-    
-    if (!change.deleted && change.doc) {
-      doc = change.doc
-      mapResults = []
-
-      mapFun(change.doc)
-
-      self.total_rows += mapResults.length
-
-      mapResults.forEach(insertRow)
-    }
-
-    self.emit('change', change)
-  })
-  .on('error', function(e) {
-    console.log(e, e.stack)
-  })
-
-  this.cancel = changes.cancel.bind(changes)
-}
-
-function getMapFun(db, map) {
-  if (typeof map === 'function') return Promise.resolve(map)
-
-  var parts = map.split('/')
-  var name = parts[0]
-  var fun = parts[1]
-
-  return db.get('_design/' + name)
-    .then(function(ddoc) {
-      return ddoc.views[fun].map
-    })
-}
-
-exports.liveQuery = function(fun, options) {
-  var db = this
-
-  options = options || {}
-
-
-  return getMapFun(db, fun)
-    .then(function(mapFun) {
-      return db.query(fun, options)
-        .then(function(result) {
-          return new LiveQuery(db, fun, mapFun, options, result)
-        })
-    })
-}
-
-if (typeof window !== 'undefined' && window.PouchDB) {
-  window.PouchDB.plugin(module.exports)
-}
-
-},{"./lib/evalfunc":2,"events":3,"inherits":4,"pouchdb-collate":5,"quick-insert":7}],2:[function(require,module,exports){
 'use strict';
 
 module.exports = function (func, emit, sum, log, isArray, toJSON) {
@@ -128,7 +6,7 @@ module.exports = function (func, emit, sum, log, isArray, toJSON) {
   return eval("'use strict'; (" + func.replace(/;\s*$/, "") + ");");
 };
 
-},{}],3:[function(require,module,exports){
+},{}],2:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -431,7 +309,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],4:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -456,7 +334,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],5:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 'use strict';
 
 var MIN_MAGNITUDE = -324; // verified by -Number.MIN_VALUE
@@ -811,7 +689,7 @@ function numToIndexableString(num) {
   return result;
 }
 
-},{"./utils":6}],6:[function(require,module,exports){
+},{"./utils":5}],5:[function(require,module,exports){
 'use strict';
 
 function pad(str, padWith, upToLength) {
@@ -882,7 +760,7 @@ exports.intToDecimalForm = function (int) {
 
   return result;
 };
-},{}],7:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 // from
 // http://stackoverflow.com/questions/1344500/efficient-way-to-insert-a-number-into-a-sorted-array-of-numbers
 
@@ -916,4 +794,126 @@ function locationOf(element, array, comparer, start, end) {
     };
 };
 
-},{}]},{},[1]);
+},{}],7:[function(require,module,exports){
+var EE = require('events').EventEmitter
+var inherit = require('inherits')
+var pouchCollate = require('pouchdb-collate')
+var collate = pouchCollate.collate
+var normalizeKey = pouchCollate.normalizeKey
+var evalFunc = require('./lib/evalfunc')
+var quickInsert = require('quick-insert')
+
+
+inherit(LiveQuery, EE)
+
+function LiveQuery(db, fun, map, options, result) {
+  var self = this
+
+  EE.call(this)
+
+  for (var property in result) {
+    this[property] = result[property]
+  }
+
+  var mapResults
+  var doc
+  function emit(key, value) {
+    var output = {
+      id: doc._id,
+      key: normalizeKey(key)
+    }
+    
+    if (typeof value !== 'undefined' && value !== null) {
+      output.value = normalizeKey(value)
+    }
+    
+    if (options.include_docs) {
+      output.doc = doc
+    }
+    
+    mapResults.push(output)
+  }
+
+  var sum
+  var log = console.log
+  var mapFun = evalFunc(map.toString(), emit, sum, log, Array.isArray, JSON.parse)
+
+  var sortFun = function(a, b) {
+    return options.descending ? collate(b.key, a.key) : collate(a.key, b.key)
+  }
+
+  var insertRow = function(row) {
+    quickInsert(row, self.rows, sortFun)
+  }
+
+  var changesOptions = {
+    include_docs: true,
+    live: true,
+    since: 'now',
+    filter: '_view',
+    view: fun
+  }
+
+  var changes = db.changes(changesOptions)
+
+  changes.on('change', function(change) {
+    var count = 0
+
+    for (var i = 0; i < self.rows.length; i++) {
+      if (self.rows[i].id === change.id) {
+        count++
+        self.rows.splice(i, 1)
+      }
+    }
+    self.total_rows -= count
+    
+    if (!change.deleted && change.doc) {
+      doc = change.doc
+      mapResults = []
+
+      mapFun(change.doc)
+
+      self.total_rows += mapResults.length
+
+      mapResults.forEach(insertRow)
+    }
+
+    self.emit('change', change)
+  })
+  
+  this.cancel = changes.cancel.bind(changes)
+}
+
+function getMapFun(db, map) {
+  if (typeof map === 'function') return Promise.resolve(map)
+
+  var parts = map.split('/')
+  var name = parts[0]
+  var fun = parts[1]
+
+  return db.get('_design/' + name)
+    .then(function(ddoc) {
+      return ddoc.views[fun].map
+    })
+}
+
+exports.liveQuery = function(fun, options) {
+  var db = this
+
+  options = options || {}
+
+
+  return getMapFun(db, fun)
+    .then(function(mapFun) {
+      return db.query(fun, options)
+        .then(function(result) {
+          return new LiveQuery(db, fun, mapFun, options, result)
+        })
+    })
+}
+
+if (typeof window !== 'undefined' && window.PouchDB) {
+  window.PouchDB.plugin(module.exports)
+}
+
+},{"./lib/evalfunc":1,"events":2,"inherits":3,"pouchdb-collate":4,"quick-insert":6}]},{},[7]);

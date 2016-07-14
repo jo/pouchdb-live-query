@@ -18,6 +18,10 @@ function LiveQuery(db, fun, map, options, result) {
     this[property] = result[property]
   }
 
+  if (typeof options.endkey === 'undefined') {
+    options.endkey = {}
+  }
+
   var mapResults
   var doc
   function emit(key, value) {
@@ -33,7 +37,7 @@ function LiveQuery(db, fun, map, options, result) {
     if (options.include_docs) {
       output.doc = doc
     }
-    
+
     mapResults.push(output)
   }
 
@@ -47,6 +51,13 @@ function LiveQuery(db, fun, map, options, result) {
 
   var insertRow = function(row) {
     quickInsert(row, self.rows, sortFun)
+
+    if (collate(options.startkey, self.rows[0].key) > 0) {
+      self.rows.shift()
+    }
+    if (collate(self.rows[self.rows.length - 1].key, options.endkey) > 0) {
+      self.rows.pop()
+    }
   }
 
   var changesOptions = {
@@ -104,7 +115,6 @@ exports.liveQuery = function(fun, options) {
   var db = this
 
   options = options || {}
-
 
   return getMapFun(db, fun)
     .then(function(mapFun) {

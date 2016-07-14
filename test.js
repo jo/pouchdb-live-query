@@ -208,6 +208,48 @@ test('descending', function(db, t) {
     })
 })
 
+test('startkey, endkey', function(db, t) {
+  db.bulkDocs({
+      docs: docs.concat(ddoc)
+    })
+    .then(function() {
+      return db.liveQuery('bar/foos', { startkey: 'b', endkey: 'bbb' })
+    })
+    .then(function(result) {
+      t.equals(result.total_rows, 3, 'correct # total rows')
+      t.deepEqual(result.rows, [
+        { id: 'two', key: 'bbb', value: 2 },
+      ], 'result.rows is correct')
+
+      result.once('change', function(change) {
+        t.equals(result.total_rows, 4, 'correct # total rows')
+        t.deepEqual(result.rows, [
+          { id: 'one-and-a-half', key: 'bb',  value: 1.5 },
+          { id: 'two',            key: 'bbb', value: 2 }
+        ], 'result.rows is correct')
+
+        result.once('change', function(change) {
+          t.equals(result.total_rows, 5, 'correct # total rows')
+          t.deepEqual(result.rows, [
+            { id: 'one-and-a-half', key: 'bb',  value: 1.5 },
+            { id: 'two',            key: 'bbb', value: 2 }
+          ], 'result.rows is correct')
+          t.end()
+        })
+      })
+    })
+    .then(function() {
+      return db.bulkDocs([
+        { _id: 'one-and-a-half', foo: 'bb', n: 1.5 },
+        { _id: 'two-and-a-half', foo: 'cc', n: 2.5 }
+      ])
+    })
+    .catch(function(e) {
+      console.error(e)
+      console.error(e.stack)
+    })
+})
+
 test('cancel', function(db, t) {
   var docOne = docs[0]
   var docTwo = docs[1]
